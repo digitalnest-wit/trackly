@@ -40,12 +40,20 @@ export default function AssetsPage() {
         description={isLoading ? 'Loading…' : `${totalCount} asset${totalCount !== 1 ? 's' : ''}`}
         action={
           canCreate ? (
-            <Button asChild>
-              <Link href={`/orgs/${orgSlug}/assets/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add asset
-              </Link>
-            </Button>
+            <>
+              <Button asChild>
+                <Link href={`/orgs/${orgSlug}/assets/import`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Import assets
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/orgs/${orgSlug}/assets/new`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add asset
+                </Link>
+              </Button>
+            </>
           ) : undefined
         }
       />
