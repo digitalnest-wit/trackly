@@ -1,8 +1,8 @@
 'use client'
 
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { completeOnboardingSetup } from '@/app/actions/org'
@@ -16,10 +16,21 @@ export default function SetupCompletePage() {
   const [saving, setSaving] = useState(false)
 
   // Guard: if user lands here without going through the wizard (e.g. direct URL),
-  // send them back to start.
+  // send them back to start. The navigation must run in an effect — calling
+  // router.replace() during render triggers a state update in the Router
+  // component mid-render, which React rejects ("Cannot update a component while
+  // rendering a different component").
+  useEffect(() => {
+    if (!name || !slug) router.replace('/org/new')
+  }, [name, slug, router])
+
+  // Render a loader (not a blank frame) while the effect above redirects.
   if (!name || !slug) {
-    router.replace('/org/new')
-    return null
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+      </div>
+    )
   }
 
   async function handleComplete() {
