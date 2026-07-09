@@ -1,3 +1,6 @@
+'use client'
+
+import Papa from 'papaparse'
 import { ChangeEvent, useState } from 'react'
 
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -23,7 +26,13 @@ function FileUploadInput() {
   // event handler for when a file is uploaded. for now, we're just
   // displaying the name of the selected file onto the console.
   const onFileUpload = () => {
-    console.log(selectedFile?.name)
+    if (selectedFile) {
+      Papa.parse(selectedFile, {
+        complete: function (result) {
+          console.log(result)
+        },
+      })
+    }
   }
 
   // a component to render the file data. if a file was selected,
