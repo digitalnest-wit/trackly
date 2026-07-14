@@ -1,90 +1,89 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import Papa from 'papaparse'
 import { ChangeEvent, useState } from 'react'
 
 import { PageHeader } from '@/components/shared/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-// we referred to the code from this site:
-//   https://www.geeksforgeeks.org/reactjs/file-uploading-in-react-js/
+// the steps for the import process
+type WizardStep =
+  | 'file_select'
+  | 'column_mapping'
+  | 'schema_validate'
+  | 'resolving_refs'
+  | 'db_insert'
 
-function FileUploadInput() {
-  // useState<File | null>
-  //   keep track of the file selected by the user. since a file may
-  //   or may not be selected, we indicate the type is File | null.
+function CurrentWizardStep() {
+  // router enables us to interface with browser navigation (go back, refresh,
+  // go to page, etc.)
+  const router = useRouter()
+
+  // the file selected by the user
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  // the current step of the wizard
+  const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
 
-  // event handler for when the selected file changes. when the file
-  // changes, update the state using the first file selected, if any.
-  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  // handles when the file selection changes
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
     if (selectedFiles) {
       setSelectedFile(selectedFiles.item(0))
     }
   }
 
-  // event handler for when a file is uploaded. for now, we're just
-  // displaying the name of the selected file onto the console.
-  const onFileUpload = () => {
+  // handles when a file is uploaded
+  const handleFileUpload = () => {
     if (selectedFile) {
       Papa.parse(selectedFile, {
-        complete: function (result) {
+        complete: (result) => {
           console.log(result)
         },
       })
+      setWizardStep('column_mapping')
     }
   }
 
-  // a component to render the file data. if a file was selected,
-  // then display some details about the file. otherwise, display
-  // a message.
-  const fileData = () => {
-    if (selectedFile) {
+  switch (wizardStep) {
+    case 'file_select':
       return (
-        <div>
-          <h2>File Details:</h2>
-          <p>File Name: {selectedFile.name}</p>
-          <p>File Type: {selectedFile.type}</p>
-          <p>Last Modified: {selectedFile.lastModified.toString()}</p>
-        </div>
+        <>
+          <Button variant={'secondary'} onClick={router.back}>
+            Cancel
+          </Button>
+          {selectedFile && (
+            <div className="my-1 flex gap-1">
+              <span className="text-secondary-foreground my-1">
+                Selected file <strong>{selectedFile.name}</strong>
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <Input type="file" accept="text/csv" onChange={handleFileChange} />
+            <Button disabled={selectedFile === null} onClick={handleFileUpload}>
+              Next
+            </Button>
+          </div>
+        </>
       )
-    } else {
-      return (
-        <div>
-          <br />
-          <h4>Choose before Pressing the Upload button</h4>
-        </div>
-      )
-    }
+    case 'column_mapping':
+      return <p>TODO mapping columns</p>
+    case 'schema_validate':
+      return <p>TODO validating against schema</p>
+    case 'resolving_refs':
+      return <p>TODO resolving reference data</p>
+    case 'db_insert':
+      return <p>TODO insert into db</p>
   }
-
-  // the JSX being returned from this component. it's a button to
-  // select files and another button to upload the files selected.
-  return (
-    <div>
-      <h1>GeeksforGeeks</h1>
-      <h3>File Upload using React!</h3>
-      <div>
-        {/* NOTICE: we aren't calling onFileChange nor onFileUpload.
-          we're passing them into the elements. React will call 
-          the functions when it needs to. */}
-        <input type="file" onChange={onFileChange} />
-        <button onClick={onFileUpload}>Upload!</button>
-      </div>
-      {/* NOTICE: here we call fileData() since it returns JSX */}
-      {fileData()}
-    </div>
-  )
 }
 
 export default function ImportPage() {
   return (
-    // NOTICE: we wrap <PageHeader /> and <FileUploadInput /> in
-    // a fragment </> since components must return at most one
-    // element.
     <>
       <PageHeader title="Import Assets" description="Upload a CSV file to import assets." />
-      <FileUploadInput />
+      <CurrentWizardStep />
     </>
   )
 }
