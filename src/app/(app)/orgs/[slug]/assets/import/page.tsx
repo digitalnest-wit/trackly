@@ -1,49 +1,74 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import Papa from 'papaparse'
 import { ChangeEvent, useState } from 'react'
 
 import { PageHeader } from '@/components/shared/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-function FileUploadInput() {
+type WizardStep =
+  | 'file_select'
+  | 'column_mapping'
+  | 'schema_validate'
+  | 'resolving_refs'
+  | 'db_insert'
+
+function CurrentWizardStep() {
+  const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
     if (selectedFiles) {
       setSelectedFile(selectedFiles.item(0))
     }
   }
-  const onFileUpload = () => {
-    console.log(selectedFile?.name)
-  }
-  const fileData = () => {
+  const handleFileUpload = () => {
     if (selectedFile) {
-      return (
-        <div>
-          <h2>File Details:</h2>
-          <p>File Name: {selectedFile.name}</p>
-          <p>File Type: {selectedFile.type}</p>
-          <p>Last Modified: {selectedFile.lastModified.toString()}</p>
-        </div>
-      )
-    } else {
-      return (
-        <div>
-          <br />
-          <h4>Choose before Pressing the Upload button</h4>
-        </div>
-      )
+      Papa.parse(selectedFile, {
+        complete: function (result) {
+          console.log(result)
+        },
+      })
+      setWizardStep('column_mapping')
     }
   }
 
-  return (
-    <div>
-      <h1>GeeksforGeeks</h1>
-      <h3>File Upload using React!</h3>
-      <div>
-        <input type="file" onChange={onFileChange} />
-        <button onClick={onFileUpload}>Upload!</button>
-      </div>
-      {fileData()}
-    </div>
-  )
+  switch (wizardStep) {
+    case 'file_select':
+      return (
+        <>
+          <Button variant={'secondary'} onClick={router.back}>
+            Cancel
+          </Button>
+          {selectedFile && (
+            <div className="my-1 flex gap-1">
+              <span className="text-secondary-foreground my-1">
+                Selected File <strong>{selectedFile.name}</strong>
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <Input type="file" accept="file/csv" onChange={handleFileChange} />
+            <Button disabled={selectedFile === null} onClick={handleFileUpload}>
+              Next
+            </Button>
+          </div>
+        </>
+      )
+    case 'column_mapping':
+      return <p>TODO: Mapping columns</p>
+    case 'schema_validate':
+      return <p>TODO: Validate Schema</p>
+    case 'resolving_refs':
+      return <p>TODO: Resolve references</p>
+    case 'db_insert':
+      return <p>TODO: Insert to database</p>
+  }
 }
 
 export default function ImportPage() {
@@ -54,7 +79,7 @@ export default function ImportPage() {
         description="Upload a CSV file to register a batch of assets"
       />
 
-      <FileUploadInput />
+      <CurrentWizardStep />
     </>
   )
 }
