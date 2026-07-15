@@ -44,7 +44,6 @@ export default function AssetsPage() {
               <Button asChild className="bg-gray-300">
                 <Link href={`/orgs/${orgSlug}/assets/import`}>
                   <Import className="mr-2 h-4 w-4" />
-                  <Plus className="mr-2 h-4 w-4" />
                   Import Assets
                 </Link>
               </Button>
