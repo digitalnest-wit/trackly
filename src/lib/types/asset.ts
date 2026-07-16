@@ -187,3 +187,26 @@ export const CheckoutFormSchema = z.object({
 })
 
 export type CheckoutFormInput = z.infer<typeof CheckoutFormSchema>
+
+// ---------------------------------------------------------------------------
+// Imported Asset form
+// ---------------------------------------------------------------------------
+
+/** Zod schema for the imported asset form — use `ImportesAsset` for the inferred type. */
+export const ImportedAssetSchema = z.object({
+  assetTag: z.string().min(1).max(50),
+  name: z.string().min(1).max(200),
+  isBulk: z.string().nullable(),
+  quantity: z.string().nullable(),
+  category: z.string().nullable(),
+  department: z.string().nullable(),
+  location: z.string().nullable(),
+  status: z.string().nullable(),
+  purchaseDate: z.string().nullable(),
+  purchaseCost: z.string().nullable(),
+  warrantyExpiry: z.string().nullable(),
+  vendor: z.string().nullable(),
+  notes: z.string().max(2000).nullable(),
+})
+
+export type ImportesAsset = z.infer<typeof ImportedAssetSchema>
