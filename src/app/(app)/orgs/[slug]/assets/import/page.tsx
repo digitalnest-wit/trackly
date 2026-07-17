@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import Papa from 'papaparse'
+import Papa, { ParseResult } from 'papaparse'
 import { ChangeEvent, useState } from 'react'
 
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -19,6 +19,7 @@ function CurrentWizardStep() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
+  const [, setUploadedData] = useState<string[][]>([])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -29,8 +30,12 @@ function CurrentWizardStep() {
   const handleFileUpload = () => {
     if (selectedFile) {
       Papa.parse(selectedFile, {
-        complete: function (result) {
-          console.log(result)
+        complete: function ({ data, errors }: ParseResult<string[]>) {
+          setUploadedData(data)
+          if (errors.length > 0) {
+            console.log(errors)
+          }
+          console.log(data)
         },
       })
       setWizardStep('column_mapping')
