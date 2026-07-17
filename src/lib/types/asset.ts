@@ -187,3 +187,25 @@ export const CheckoutFormSchema = z.object({
 })
 
 export type CheckoutFormInput = z.infer<typeof CheckoutFormSchema>
+
+// ---------------------------------------------------------------------------
+// Imported asset from file upload
+// ---------------------------------------------------------------------------
+
+export const ImportedAssetSchema = z.object({
+  assetTag: z.string().min(1).max(50),
+  name: z.string().min(1).max(200),
+  isBulk: z.string().nullish(),
+  quantity: z.string().nullish(),
+  category: z.string().nullish(),
+  department: z.string().nullish(),
+  location: z.string().nullish(),
+  status: z.string().nullish(),
+  purchaseDate: z.string().nullish(),
+  purchaseCost: z.string().nullish(),
+  warrantyExpiry: z.string().nullish(),
+  vendor: z.string().nullish(),
+  notes: z.string().max(2000).nullish(),
+})
+
+export type ImportedAsset = z.infer<typeof ImportedAssetSchema>
