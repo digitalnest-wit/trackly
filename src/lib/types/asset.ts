@@ -209,4 +209,20 @@ export const ImportedAssetSchema = z.object({
   notes: z.string().max(2000).nullable(),
 })
 
-export type ImportesAsset = z.infer<typeof ImportedAssetSchema>
+export type ImportedAsset = z.infer<typeof ImportedAssetSchema>
+
+export const IMPORTED_ASSET_LABELS: Record<keyof ImportedAsset, string> = {
+  assetTag: 'Asset Tag',
+  name: 'Name',
+  isBulk: 'Is Bulk',
+  quantity: 'Quantity',
+  category: 'Category',
+  department: 'Department',
+  location: 'Location',
+  status: 'Status',
+  purchaseDate: 'Purchase Date',
+  purchaseCost: 'Purchase Cost',
+  warrantyExpiry: 'Warranty Expiry',
+  vendor: 'Vendor',
+  notes: 'Notes',
+}
