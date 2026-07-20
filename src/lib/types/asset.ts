@@ -209,3 +209,19 @@ export const ImportedAssetSchema = z.object({
 })
 
 export type ImportedAsset = z.infer<typeof ImportedAssetSchema>
+
+export const IMPORTED_ASSET_LABELS: Record<keyof ImportedAsset, string> = {
+  status: 'Status',
+  assetTag: 'Asset Tag',
+  name: 'Name',
+  isBulk: 'Is Bulk',
+  quantity: 'Quantity',
+  purchaseDate: 'Date Purchased',
+  purchaseCost: 'Cost',
+  warrantyExpiry: 'Warranty Expiry',
+  notes: 'Notes',
+  category: 'Category',
+  department: 'Department',
+  location: 'Location',
+  vendor: 'Vendor',
+}

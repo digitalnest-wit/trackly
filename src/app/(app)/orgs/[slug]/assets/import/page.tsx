@@ -1,12 +1,23 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import Papa, { ParseResult } from 'papaparse'
 import { ChangeEvent, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { IMPORTED_ASSET_LABELS, ImportedAsset, ImportedAssetSchema } from '@/lib/types'
 
 // the steps for the import process
 type WizardStep =
@@ -26,7 +37,12 @@ function CurrentWizardStep() {
   // the current step of the wizard
   const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
   // the data parsed from the uploaded file
-  const [, setUploadedData] = useState<string[][]>([])
+  const [uploadedData, setUploadedData] = useState<string[][]>([])
+  // the form, mapping properties in ImportedAsset to actual columns
+  // in uploaded data CSV header.
+  const mappingForm = useForm<ImportedAsset>({
+    resolver: zodResolver(ImportedAssetSchema),
+  })
 
   // handles when the file selection changes
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +68,10 @@ function CurrentWizardStep() {
     }
   }
 
+  const handleMappingSubmit = (data: ImportedAsset) => {
+    console.log(data)
+  }
+
   switch (wizardStep) {
     case 'file_select':
       return (
@@ -75,7 +95,48 @@ function CurrentWizardStep() {
         </>
       )
     case 'column_mapping':
-      return <p>TODO mapping columns</p>
+      return (
+        <Form {...mappingForm}>
+          <form onSubmit={mappingForm.handleSubmit(handleMappingSubmit)} className="space-y-8">
+            <div className="grid grid-cols-4 gap-2">
+              {Object.entries(IMPORTED_ASSET_LABELS).map(([property, label]) => (
+                <FormField
+                  control={mappingForm.control}
+                  key={`field-${property}`}
+                  name={property as keyof ImportedAsset}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{label}</FormLabel>
+                      <Select
+                        value={field.value ?? '__none__'}
+                        onValueChange={(v) => {
+                          field.onChange(v === '__none__' ? null : v)
+                          console.log(`field '${property}' changed to '${v}'`)
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="__none__">None</SelectItem>
+                          {uploadedData[0]?.map((column, i) => (
+                            <SelectItem key={`select-item-${property}-${i}`} value={column}>
+                              {column}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+            <Button type="submit">Confirm</Button>
+          </form>
+        </Form>
+      )
     case 'schema_validate':
       return <p>TODO validating against schema</p>
     case 'resolving_refs':
