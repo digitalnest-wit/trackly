@@ -118,7 +118,7 @@ function CurrentWizardStep() {
                         <SelectContent>
                           <SelectItem value="__none__">None</SelectItem>
                           {uploadedData[0]?.map((column, i) => (
-                            <SelectItem key={i} value={column}>
+                            <SelectItem key={i} value={`${column}:${i}`}>
                               {column}
                             </SelectItem>
                           ))}
