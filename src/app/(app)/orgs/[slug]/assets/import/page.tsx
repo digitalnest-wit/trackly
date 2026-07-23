@@ -64,7 +64,15 @@ function CurrentWizardStep() {
     }
   }
 
-  const handleMappingSubmit = () => {
+  const handleSchemaValidation = () => {
+    setWizardStep('schema_validate')
+    const asset: Partial<ImportedAsset> = {}
+    Object.entries(mappingForm.getValues()).map(([property, columnLocation]) => {
+      if (uploadedData && columnLocation) {
+        const columnIndex = Number(columnLocation.split(':')[1])
+        asset[property as keyof ImportedAsset] = uploadedData[1]![columnIndex]
+      }
+    })
     console.log(mappingForm.getValues())
   }
 
@@ -94,7 +102,7 @@ function CurrentWizardStep() {
     case 'column_mapping':
       return (
         <Form {...mappingForm}>
-          <form onSubmit={mappingForm.handleSubmit(handleMappingSubmit)} className="space-y-8">
+          <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
             <div className="grid gap-4 sm:grid-cols-2">
               {Object.entries(IMPORTED_ASSET_LABELS).map(([property, label]) => (
                 <FormField
