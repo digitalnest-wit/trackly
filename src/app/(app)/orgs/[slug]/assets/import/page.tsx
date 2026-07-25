@@ -38,9 +38,25 @@ function CurrentWizardStep() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
   const [uploadedData, setUploadedData] = useState<string[][]>([])
+  const [validAssetCounter, setValidAssetCounter] = useState<number>(0)
+  const [invalidAssetCounter, setInvalidAssetCounter] = useState<number>(0)
 
   const mappingForm = useForm<ImportedAsset>({
     resolver: zodResolver(ImportedAssetSchema),
+    // Added default values to allow to fix safe parse undefined error and to allow the form to be submitted with optional parameters
+    defaultValues: {
+      isBulk: null,
+      quantity: null,
+      category: null,
+      department: null,
+      location: null,
+      status: null,
+      purchaseDate: null,
+      purchaseCost: null,
+      warrantyExpiry: null,
+      vendor: null,
+      notes: null,
+    },
   })
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -66,14 +82,47 @@ function CurrentWizardStep() {
 
   const handleSchemaValidation = () => {
     setWizardStep('schema_validate')
-    const asset: Partial<ImportedAsset> = {}
-    Object.entries(mappingForm.getValues()).map(([property, columnLocation]) => {
-      if (uploadedData && columnLocation) {
-        const columnIndex = Number(columnLocation.split(':')[1])
-        asset[property as keyof ImportedAsset] = uploadedData[1]![columnIndex]
+
+    const validatedAssets: ImportedAsset[] = []
+    for (let assetRow = 1; assetRow < uploadedData.length - 1; assetRow++) {
+      // Creates an ImportedAsset object setting all properties to undefined
+      const asset: Partial<ImportedAsset> = {}
+      // Efficiency Issues: We are doing String manipulation and conversion each time we add an item. Best practice would be to do it once
+      Object.entries(mappingForm.getValues()).map(([property, columnLocation]) => {
+        if (columnLocation != null) {
+          asset[property as keyof ImportedAsset] =
+            uploadedData[assetRow]![Number(columnLocation!.split(':')[1])]
+        } else {
+          ;(asset as Record<string, unknown>)[property] = null
+        }
+      })
+      // Print the asset object with properties initialized to the given asset data from uploaded csv file
+      console.log(asset)
+
+      // Verify the object does follow the expected schema structure
+      const result = ImportedAssetSchema.safeParse(asset)
+      if (result.success) {
+        // Store the valid asset rows
+        validatedAssets.push(result.data)
+        // Add 1 to the valid asset row counter
+        setValidAssetCounter((prevValidCOunt) => prevValidCOunt + 1)
+      } else {
+        // Add 1 to the invalid asset row counter
+        setInvalidAssetCounter((prevInvalidCount) => prevInvalidCount + 1)
+        console.log(result.error)
       }
-    })
-    console.log(mappingForm.getValues())
+    }
+    console.log(validatedAssets)
+  }
+
+  const handleReferenceResolver = () => {
+    setWizardStep('resolving_refs')
+  }
+
+  const handleBacktoColumnMapping = () => {
+    setWizardStep('column_mapping')
+    setValidAssetCounter(0)
+    setInvalidAssetCounter(0)
   }
 
   switch (wizardStep) {
@@ -143,7 +192,22 @@ function CurrentWizardStep() {
         </Form>
       )
     case 'schema_validate':
-      return <p>TODO: Validate Schema</p>
+      return (
+        <>
+          <div className="flex flex-col gap-2 p-2 pl-0">
+            <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
+            <p className="text-destructive">Failed Validated Rows: {invalidAssetCounter}</p>
+          </div>
+          <div className="flex gap-4 pt-2">
+            <Button variant={'secondary'} onClick={handleBacktoColumnMapping}>
+              Cancel
+            </Button>
+            <Button variant={'default'} onClick={handleReferenceResolver}>
+              Next
+            </Button>
+          </div>
+        </>
+      )
     case 'resolving_refs':
       return <p>TODO: Resolve references</p>
     case 'db_insert':
