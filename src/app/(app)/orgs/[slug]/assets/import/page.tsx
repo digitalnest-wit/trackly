@@ -40,7 +40,7 @@ function CurrentWizardStep() {
   const [uploadedData, setUploadedData] = useState<string[][]>([])
   const [validAssetCounter, setValidAssetCounter] = useState<number>(0)
   const [invalidAssetCounter, setInvalidAssetCounter] = useState<number>(0)
-
+  const [validatedAssets, setValidatedAssets] = useState<ImportedAsset[]>([])
   const mappingForm = useForm<ImportedAsset>({
     resolver: zodResolver(ImportedAssetSchema),
     // Added default values to allow to fix safe parse undefined error and to allow the form to be submitted with optional parameters
@@ -83,7 +83,6 @@ function CurrentWizardStep() {
   const handleSchemaValidation = () => {
     setWizardStep('schema_validate')
 
-    const validatedAssets: ImportedAsset[] = []
     for (let assetRow = 1; assetRow < uploadedData.length - 1; assetRow++) {
       // Creates an ImportedAsset object setting all properties to undefined
       const asset: Partial<ImportedAsset> = {}
@@ -103,7 +102,7 @@ function CurrentWizardStep() {
       const result = ImportedAssetSchema.safeParse(asset)
       if (result.success) {
         // Store the valid asset rows
-        validatedAssets.push(result.data)
+        setValidatedAssets((prev) => [...prev, result.data])
         // Add 1 to the valid asset row counter
         setValidAssetCounter((prevValidCOunt) => prevValidCOunt + 1)
       } else {
