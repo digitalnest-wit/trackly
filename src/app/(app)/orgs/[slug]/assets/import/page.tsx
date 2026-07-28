@@ -24,7 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { IMPORTED_ASSET_LABELS, ImportedAsset, ImportedAssetSchema } from '@/lib/types'
+import { useCategories, useCategoryMutations } from '@/lib/hooks/useCategories'
+import {
+  AssetFormInput,
+  IMPORTED_ASSET_LABELS,
+  ImportedAsset,
+  ImportedAssetSchema,
+} from '@/lib/types'
 
 type WizardStep =
   | 'file_select'
@@ -58,6 +64,8 @@ function CurrentWizardStep() {
       notes: null,
     },
   })
+  const { data: categories } = useCategories()
+  const { create: createCategory } = useCategoryMutations()
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -116,6 +124,47 @@ function CurrentWizardStep() {
 
   const handleReferenceResolver = () => {
     setWizardStep('resolving_refs')
+
+    validatedAssets.forEach(async (asset) => {
+      const resolvedAsset: AssetFormInput = {
+        name: asset.name,
+        assetTag: asset.assetTag,
+        isBulk: false,
+        quantity: asset.quantity ? Number(asset.quantity) : null,
+        categoryId: null,
+        departmentId: null,
+        locationId: null,
+        status: 'active', // default 'active' for now
+        purchaseDate: null,
+        purchaseCost: asset.purchaseCost ? Number(asset.purchaseCost) : null,
+        warrantyExpiry: asset.warrantyExpiry,
+        vendorId: null,
+      }
+
+      if (asset.isBulk) {
+        if (asset.isBulk.toLowerCase() === 'true' || asset.isBulk.toLowerCase() === 'yes') {
+          resolvedAsset.isBulk = true
+        } else if (asset.isBulk.toLowerCase() === 'false' || asset.isBulk.toLowerCase() === 'no') {
+          resolvedAsset.isBulk = false
+        }
+      }
+
+      if (asset.category) {
+        // we have a category, find the id and set the resolvedAsset.category
+        const result = categories.find((category) => category.name === asset.category)
+        if (result) {
+          resolvedAsset.categoryId = result.id
+        } else {
+          // no mathc, create the category
+          const id = await createCategory({ name: asset.category })
+          if (id) {
+            resolvedAsset.categoryId = id
+          }
+        }
+      } else {
+        // no category provided, skip
+      }
+    })
   }
 
   const handleBacktoColumnMapping = () => {
