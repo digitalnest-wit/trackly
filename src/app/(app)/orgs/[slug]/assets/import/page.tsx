@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useCategories, useCategoryMutations } from '@/lib/hooks/useCategories'
+import { useDepartmentMutations, useDepartments } from '@/lib/hooks/useDepartments'
 import {
   AssetFormInput,
   IMPORTED_ASSET_LABELS,
@@ -66,6 +67,8 @@ function CurrentWizardStep() {
   })
   const { data: categories } = useCategories()
   const { create: createCategory } = useCategoryMutations()
+  const { data: departments } = useDepartments()
+  const { create: createDepartment } = useDepartmentMutations()
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -155,7 +158,7 @@ function CurrentWizardStep() {
         if (result) {
           resolvedAsset.categoryId = result.id
         } else {
-          // no mathc, create the category
+          // no match, create the category
           const id = await createCategory({ name: asset.category })
           if (id) {
             resolvedAsset.categoryId = id
@@ -163,6 +166,22 @@ function CurrentWizardStep() {
         }
       } else {
         // no category provided, skip
+      }
+
+      if (asset.department) {
+        // We have a department, find the id and set the resolvedAsset.department
+        const result = departments.find((department) => department.name === asset.department)
+        if (result) {
+          resolvedAsset.departmentId = result.id
+        } else {
+          // no match, create the department
+          const id = await createDepartment({ name: asset.department })
+          if (id) {
+            resolvedAsset.departmentId = id
+          }
+        }
+      } else {
+        // no department provided, skip
       }
     })
   }
