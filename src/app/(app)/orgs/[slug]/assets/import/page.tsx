@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { useCategories, useCategoryMutations } from '@/lib/hooks/useCategories'
 import { useDepartmentMutations, useDepartments } from '@/lib/hooks/useDepartments'
+import { useLocationMutations, useLocations } from '@/lib/hooks/useLocations'
 import {
   AssetFormInput,
   IMPORTED_ASSET_LABELS,
@@ -69,6 +70,9 @@ function CurrentWizardStep() {
   const { create: createCategory } = useCategoryMutations()
   const { data: departments } = useDepartments()
   const { create: createDepartment } = useDepartmentMutations()
+
+  const { data: location } = useLocations()
+  const { create: createLocation } = useLocationMutations()
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -182,6 +186,17 @@ function CurrentWizardStep() {
         }
       } else {
         // no department provided, skip
+      }
+      if (asset.location) {
+        const result = location.find((locaiton) => locaiton.name === asset.location)
+        if (result) {
+          resolvedAsset.locationId = result.id
+        } else {
+          const id = await createLocation({ name: asset.location })
+          if (id) {
+            resolvedAsset.locationId = id
+          }
+        }
       }
     })
   }
