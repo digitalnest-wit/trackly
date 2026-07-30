@@ -27,6 +27,7 @@ import {
 import { useCategories, useCategoryMutations } from '@/lib/hooks/useCategories'
 import { useDepartmentMutations, useDepartments } from '@/lib/hooks/useDepartments'
 import { useLocationMutations, useLocations } from '@/lib/hooks/useLocations'
+import { useVendorMutations, useVendors } from '@/lib/hooks/useVendors'
 import {
   AssetFormInput,
   IMPORTED_ASSET_LABELS,
@@ -70,9 +71,10 @@ function CurrentWizardStep() {
   const { create: createCategory } = useCategoryMutations()
   const { data: departments } = useDepartments()
   const { create: createDepartment } = useDepartmentMutations()
-
   const { data: location } = useLocations()
   const { create: createLocation } = useLocationMutations()
+  const { data: vendors } = useVendors()
+  const { create: createVendor } = useVendorMutations()
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -195,6 +197,17 @@ function CurrentWizardStep() {
           const id = await createLocation({ name: asset.location })
           if (id) {
             resolvedAsset.locationId = id
+          }
+        }
+      }
+      if (asset.vendor) {
+        const result = vendors.find((vendor) => vendor.name === asset.vendor)
+        if (result) {
+          resolvedAsset.vendorId = result.id
+        } else {
+          const id = await createVendor({ name: asset.vendor })
+          if (id) {
+            resolvedAsset.vendorId = id
           }
         }
       }
