@@ -5,18 +5,19 @@ import { DepartmentFormSchema, type DepartmentFormInput } from '@/lib/types'
 
 import { logAudit } from './_audit'
 import type { ActionClients } from './_context'
-import { getAdminCtx, getContext } from './_context'
+import { getAdminCtx, getContext, getContextWithPermission } from './_context'
 import { mapDbError } from './_db'
 
 /** Create a new department scoped to the org. Rejects duplicate names (case-insensitive). */
 export async function createDepartment(
   orgSlug: string,
-  input: DepartmentFormInput
+  input: DepartmentFormInput,
+  clients?: ActionClients
 ): Promise<{ id: string } | { error: string }> {
   const parsed = DepartmentFormSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  const ctx = await getAdminCtx(orgSlug)
+  const ctx = await getContextWithPermission(orgSlug, 'department:create', clients)
   if ('error' in ctx) return ctx
 
   const { data: existing } = await ctx.admin

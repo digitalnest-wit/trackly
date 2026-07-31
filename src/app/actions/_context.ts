@@ -1,4 +1,5 @@
 import { createPolicy } from '@/lib/permissions'
+import type { PolicyAction } from '@/lib/permissions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import type { UserRole } from '@/lib/types'
@@ -84,4 +85,16 @@ export async function getAdminCtx(
   const ctx = await getContext(orgSlug, clients)
   if (!ctx) return { error: 'Not authenticated' }
   return ctx.requireRole('admin') ?? ctx
+}
+
+/** Get context and assert an arbitrary policy action in one call. */
+export async function getContextWithPermission(
+  orgSlug: string,
+  action: PolicyAction,
+  clients?: ActionClients
+): Promise<ActionContext | { error: string }> {
+  const ctx = await getContext(orgSlug, clients)
+  if (!ctx) return { error: 'Not authenticated' }
+  const denied = createPolicy({ role: ctx.role, departmentIds: ctx.departmentIds }).enforce(action)
+  return denied ?? ctx
 }

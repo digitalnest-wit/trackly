@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { deleteCategory } from '../categories'
+import { createCategory, deleteCategory } from '../categories'
 
 import { makeChain, makeClients, makeUnauthenticatedClients } from './_helpers'
 
@@ -66,5 +66,53 @@ describe('deleteCategory', () => {
 
     const result = await deleteCategory('acme-corp', CATEGORY_ID, clients)
     expect(result).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// createCategory
+// ---------------------------------------------------------------------------
+
+describe('createCategory', () => {
+  it('returns error when user is not authenticated', async () => {
+    const clients = makeUnauthenticatedClients(chain)
+    const result = await createCategory('acme-corp', { name: 'Power Tools' }, clients)
+    expect(result).toEqual({ error: 'Not authenticated' })
+  })
+
+  it('returns error when viewer tries to create a category', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'viewer' } })
+
+    const result = await createCategory('acme-corp', { name: 'Power Tools' }, clients)
+    expect(result).toEqual({ error: 'Not authorised' })
+  })
+
+  it('allows an editor to create a category', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'editor' } })
+    chain.maybeSingle.mockResolvedValueOnce({ data: null }) // no existing category
+    chain.single.mockResolvedValueOnce({ data: { id: 'cat-00002' }, error: null })
+
+    const result = await createCategory('acme-corp', { name: 'Power Tools' }, clients)
+
+    expect(result).toEqual({ id: 'cat-00002' })
+  })
+
+  it('allows an admin to create a category', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'admin' } })
+    chain.maybeSingle.mockResolvedValueOnce({ data: null })
+    chain.single.mockResolvedValueOnce({ data: { id: 'cat-00003' }, error: null })
+
+    const result = await createCategory('acme-corp', { name: 'Hand Tools' }, clients)
+
+    expect(result).toEqual({ id: 'cat-00003' })
+  })
+
+  it('rejects a duplicate name (case-insensitive)', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'editor' } })
+    chain.maybeSingle.mockResolvedValueOnce({ data: { id: 'cat-00001' } })
+
+    const result = await createCategory('acme-corp', { name: 'electronics' }, clients)
+
+    expect(result).toEqual({ error: 'A category with that name already exists.' })
   })
 })

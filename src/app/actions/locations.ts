@@ -4,18 +4,20 @@ import { softDeleteWithCascade } from '@/lib/soft-delete'
 import { LocationFormSchema, type LocationFormInput } from '@/lib/types'
 
 import { logAudit } from './_audit'
-import { getAdminCtx } from './_context'
+import type { ActionClients } from './_context'
+import { getAdminCtx, getContextWithPermission } from './_context'
 import { mapDbError } from './_db'
 
 /** Create a new location scoped to the org. Rejects duplicate names (case-insensitive). */
 export async function createLocation(
   orgSlug: string,
-  input: LocationFormInput
+  input: LocationFormInput,
+  clients?: ActionClients
 ): Promise<{ id: string } | { error: string }> {
   const parsed = LocationFormSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  const ctx = await getAdminCtx(orgSlug)
+  const ctx = await getContextWithPermission(orgSlug, 'location:create', clients)
   if ('error' in ctx) return ctx
 
   const { data: existing } = await ctx.admin

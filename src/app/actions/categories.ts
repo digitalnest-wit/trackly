@@ -5,18 +5,19 @@ import { CategoryFormSchema, type CategoryFormInput } from '@/lib/types'
 
 import { logAudit } from './_audit'
 import type { ActionClients } from './_context'
-import { getAdminCtx, getContext } from './_context'
+import { getAdminCtx, getContext, getContextWithPermission } from './_context'
 import { mapDbError } from './_db'
 
 /** Create a new category scoped to the org. Rejects duplicate names (case-insensitive). */
 export async function createCategory(
   orgSlug: string,
-  input: CategoryFormInput
+  input: CategoryFormInput,
+  clients?: ActionClients
 ): Promise<{ id: string } | { error: string }> {
   const parsed = CategoryFormSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  const ctx = await getAdminCtx(orgSlug)
+  const ctx = await getContextWithPermission(orgSlug, 'category:create', clients)
   if ('error' in ctx) return ctx
 
   const { data: existing } = await ctx.admin

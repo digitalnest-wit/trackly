@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { deleteDepartment } from '../departments'
+import { createDepartment, deleteDepartment } from '../departments'
 
 import { makeChain, makeClients, makeUnauthenticatedClients } from './_helpers'
 
@@ -66,5 +66,43 @@ describe('deleteDepartment', () => {
 
     const result = await deleteDepartment('acme-corp', DEPT_ID, clients)
     expect(result).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// createDepartment
+// ---------------------------------------------------------------------------
+
+describe('createDepartment', () => {
+  it('returns error when user is not authenticated', async () => {
+    const clients = makeUnauthenticatedClients(chain)
+    const result = await createDepartment('acme-corp', { name: 'Facilities' }, clients)
+    expect(result).toEqual({ error: 'Not authenticated' })
+  })
+
+  it('returns error when viewer tries to create a department', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'viewer' } })
+
+    const result = await createDepartment('acme-corp', { name: 'Facilities' }, clients)
+    expect(result).toEqual({ error: 'Not authorised' })
+  })
+
+  it('allows an editor to create a department', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'editor' } })
+    chain.maybeSingle.mockResolvedValueOnce({ data: null }) // no existing department
+    chain.single.mockResolvedValueOnce({ data: { id: 'dept-00002' }, error: null })
+
+    const result = await createDepartment('acme-corp', { name: 'Facilities' }, clients)
+
+    expect(result).toEqual({ id: 'dept-00002' })
+  })
+
+  it('rejects a duplicate name (case-insensitive)', async () => {
+    const clients = makeClients(chain, { seedContext: { role: 'editor' } })
+    chain.maybeSingle.mockResolvedValueOnce({ data: { id: 'dept-00001' } })
+
+    const result = await createDepartment('acme-corp', { name: 'engineering' }, clients)
+
+    expect(result).toEqual({ error: 'A department with that name already exists.' })
   })
 })
