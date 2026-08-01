@@ -258,6 +258,10 @@ function CurrentWizardStep() {
     case 'file_select':
       return (
         <>
+          <PageHeader
+            title="Import assets"
+            description="Upload a CSV file to register a batch of assets"
+          />
           <Button variant={'secondary'} onClick={router.back}>
             Cancel
           </Button>
@@ -279,50 +283,57 @@ function CurrentWizardStep() {
       )
     case 'column_mapping':
       return (
-        <Form {...mappingForm}>
-          <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {Object.entries(IMPORTED_ASSET_LABELS).map(([property, label]) => (
-                <FormField
-                  control={mappingForm.control}
-                  key={`field-${property}`}
-                  name={property as keyof ImportedAsset}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{label}</FormLabel>
-                      <Select
-                        value={field.value ?? '__none__'}
-                        onValueChange={(v) => {
-                          field.onChange(v === '__none__' ? null : v)
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="__none__">None</SelectItem>
-                          {uploadedData[0]?.map((column, i) => (
-                            <SelectItem key={i} value={`${column}:${i}`}>
-                              {column}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
-            <Button type="submit">Confirm</Button>
-          </form>
-        </Form>
+        <>
+          <PageHeader title="Column mapping" description="Select columns from uploaded file" />
+          <Form {...mappingForm}>
+            <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Object.entries(IMPORTED_ASSET_LABELS).map(([property, label]) => (
+                  <FormField
+                    control={mappingForm.control}
+                    key={`field-${property}`}
+                    name={property as keyof ImportedAsset}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{label}</FormLabel>
+                        <Select
+                          value={field.value ?? '__none__'}
+                          onValueChange={(v) => {
+                            field.onChange(v === '__none__' ? null : v)
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="__none__">None</SelectItem>
+                            {uploadedData[0]?.map((column, i) => (
+                              <SelectItem key={i} value={`${column}:${i}`}>
+                                {column}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+              <Button type="submit">Confirm</Button>
+            </form>
+          </Form>
+        </>
       )
     case 'schema_validate':
       return (
         <>
+          <PageHeader
+            title="Schmema validation"
+            description="Checking the header row in the file"
+          />
           <div className="flex flex-col gap-2 p-2 pl-0">
             <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
             <p className="text-destructive">Failed Validated Rows: {invalidAssetCounter}</p>
@@ -345,14 +356,5 @@ function CurrentWizardStep() {
 }
 
 export default function ImportPage() {
-  return (
-    <>
-      <PageHeader
-        title="Import assets"
-        description="Upload a CSV file to register a batch of assets"
-      />
-
-      <CurrentWizardStep />
-    </>
-  )
+  return <CurrentWizardStep />
 }
