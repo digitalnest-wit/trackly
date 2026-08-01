@@ -143,8 +143,8 @@ function CurrentWizardStep() {
         categoryId: null,
         departmentId: null,
         locationId: null,
-        status: 'active', // default 'active' for now
-        purchaseDate: null,
+        status: 'active', // default is 'active'
+        purchaseDate: asset.purchaseDate,
         purchaseCost: asset.purchaseCost ? Number(asset.purchaseCost) : null,
         warrantyExpiry: asset.warrantyExpiry,
         vendorId: null,
@@ -157,7 +157,41 @@ function CurrentWizardStep() {
           resolvedAsset.isBulk = false
         }
       }
+      if (asset.status) {
+        const assetStatus = asset.status.toLowerCase().trim().replaceAll(' ', '_')
+        switch (assetStatus) {
+          case 'active':
+            resolvedAsset.status = 'active'
+            break
 
+          case 'under_maintenance':
+            resolvedAsset.status = 'under_maintenance'
+            break
+
+          case 'retired':
+            resolvedAsset.status = 'retired'
+            break
+
+          case 'lost':
+            resolvedAsset.status = 'lost'
+            break
+
+          case 'in_storage':
+            resolvedAsset.status = 'in_storage'
+            break
+
+          case 'checked_out':
+            resolvedAsset.status = 'checked_out'
+            break
+
+          case 'reserved':
+            resolvedAsset.status = 'reserved'
+            break
+
+          default:
+            break
+        }
+      }
       if (asset.category) {
         // we have a category, find the id and set the resolvedAsset.category
         const result = categories.find((category) => category.name === asset.category)
