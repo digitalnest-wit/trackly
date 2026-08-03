@@ -75,6 +75,7 @@ function CurrentWizardStep() {
   const { create: createLocation } = useLocationMutations()
   const { data: vendors } = useVendors()
   const { create: createVendor } = useVendorMutations()
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -260,6 +261,20 @@ function CurrentWizardStep() {
                         value={field.value ?? '__none__'}
                         onValueChange={(v) => {
                           field.onChange(v === '__none__' ? null : v)
+                          if (v !== '__none__') {
+                            setSelectedColumns(
+                              selectedColumns.filter(
+                                (status) => status !== field.value?.split(':')[0]
+                              )
+                            )
+                            setSelectedColumns((prev) => [...prev, v.split(':')[0] ?? ''])
+                          } else {
+                            setSelectedColumns(
+                              selectedColumns.filter(
+                                (status) => status !== field.value?.split(':')[0]
+                              )
+                            )
+                          }
                         }}
                       >
                         <FormControl>
@@ -270,7 +285,11 @@ function CurrentWizardStep() {
                         <SelectContent>
                           <SelectItem value="__none__">None</SelectItem>
                           {uploadedData[0]?.map((column, i) => (
-                            <SelectItem key={i} value={`${column}:${i}`}>
+                            <SelectItem
+                              key={i}
+                              value={`${column}:${i}`}
+                              disabled={selectedColumns.includes(column)}
+                            >
                               {column}
                             </SelectItem>
                           ))}
