@@ -261,7 +261,7 @@ function CurrentWizardStep() {
         <>
           <PageHeader
             title="Import assets"
-            description="Upload a CSV file to register a batch of assets"
+            description="Upload a CSV file to register a batch of assets. "
           />
           <Button variant={'secondary'} onClick={router.back}>
             Cancel
@@ -285,7 +285,7 @@ function CurrentWizardStep() {
     case 'column_mapping':
       return (
         <>
-          <PageHeader title="Column mapping" description="Select columns from uploaded file" />
+          <PageHeader title="Column mapping" description="Select columns from uploaded file. " />
           <Form {...mappingForm}>
             <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -350,8 +350,8 @@ function CurrentWizardStep() {
       return (
         <>
           <PageHeader
-            title="Schmema validation"
-            description="Checking the header row in the file"
+            title="Schema Validation"
+            description="Each row in this uploaded file is checked against our schema. "
           />
           <div className="flex flex-col gap-2 p-2 pl-0">
             <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
