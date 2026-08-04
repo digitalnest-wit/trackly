@@ -37,7 +37,7 @@ import {
 
 type WizardStep = 'file_select' | 'column_mapping' | 'schema_validate'
 
-function CurrentWizardStep() {
+export default function ImportPage() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
@@ -374,8 +374,4 @@ function CurrentWizardStep() {
         </>
       )
   }
-}
-
-export default function ImportPage() {
-  return <CurrentWizardStep />
 }
