@@ -285,7 +285,7 @@ function CurrentWizardStep() {
     case 'column_mapping':
       return (
         <>
-          <PageHeader title="Column mapping" description="Select columns from uploaded file. " />
+          <PageHeader title="Column Mapping" description="Select columns from uploaded file. " />
           <Form {...mappingForm}>
             <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -341,11 +341,24 @@ function CurrentWizardStep() {
                   />
                 ))}
               </div>
-              <Button type="submit">Confirm</Button>
+              <div className="flex gap-4 pt-2">
+                <Button
+                  variant={'secondary'}
+                  onClick={() => {
+                    setWizardStep('file_select')
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button variant={'default'} onClick={handleBacktoColumnMapping}>
+                  Confirm
+                </Button>
+              </div>
             </form>
           </Form>
         </>
       )
+
     case 'schema_validate':
       return (
         <>
