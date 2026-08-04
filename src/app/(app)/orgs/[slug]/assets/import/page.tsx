@@ -35,12 +35,7 @@ import {
   ImportedAssetSchema,
 } from '@/lib/types'
 
-type WizardStep =
-  | 'file_select'
-  | 'column_mapping'
-  | 'schema_validate'
-  | 'resolving_refs'
-  | 'db_insert'
+type WizardStep = 'file_select' | 'column_mapping' | 'schema_validate'
 
 function CurrentWizardStep() {
   const router = useRouter()
@@ -133,8 +128,6 @@ function CurrentWizardStep() {
   }
 
   const handleReferenceResolver = () => {
-    setWizardStep('resolving_refs')
-
     validatedAssets.forEach(async (asset) => {
       const resolvedAsset: AssetFormInput = {
         name: asset.name,
@@ -375,15 +368,11 @@ function CurrentWizardStep() {
               Cancel
             </Button>
             <Button variant={'default'} onClick={handleReferenceResolver}>
-              Next
+              Proceed
             </Button>
           </div>
         </>
       )
-    case 'resolving_refs':
-      return <p>TODO: Resolve references</p>
-    case 'db_insert':
-      return <p>TODO: Insert to database</p>
   }
 }
 
