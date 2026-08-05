@@ -6,6 +6,7 @@ import Papa, { ParseResult } from 'papaparse'
 import { ChangeEvent, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { createAsset } from '@/app/actions/assets'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,13 +35,9 @@ import {
   ImportedAsset,
   ImportedAssetSchema,
 } from '@/lib/types'
+import { useOrg } from '@/providers/OrgProvider'
 
-type WizardStep =
-  | 'file_select'
-  | 'column_mapping'
-  | 'schema_validate'
-  | 'resolving_refs'
-  | 'db_insert'
+type WizardStep = 'file_select' | 'column_mapping' | 'schema_validate' | 'bulk_import_finalization'
 
 function CurrentWizardStep() {
   const router = useRouter()
@@ -76,6 +73,9 @@ function CurrentWizardStep() {
   const { data: vendors } = useVendors()
   const { create: createVendor } = useVendorMutations()
   const [selectedColumns, setSelectedColumns] = useState<string[]>([])
+  const { membership } = useOrg()
+  const orgSlug = membership?.orgSlug ?? ''
+  const [resolvedAssets, setResolvedAssets] = useState<AssetFormInput[]>([])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -133,8 +133,6 @@ function CurrentWizardStep() {
   }
 
   const handleReferenceResolver = () => {
-    setWizardStep('resolving_refs')
-
     validatedAssets.forEach(async (asset) => {
       const resolvedAsset: AssetFormInput = {
         name: asset.name,
@@ -246,6 +244,17 @@ function CurrentWizardStep() {
           }
         }
       }
+
+      setResolvedAssets((prevResolvedAssets) => [...prevResolvedAssets, resolvedAsset])
+    })
+
+    setWizardStep('bulk_import_finalization')
+  }
+
+  const handleInsert = () => {
+    resolvedAssets.map(async (asset) => {
+      const newAasset = await createAsset(orgSlug, asset)
+      console.log(newAasset)
     })
   }
 
@@ -367,10 +376,28 @@ function CurrentWizardStep() {
           </div>
         </>
       )
-    case 'resolving_refs':
-      return <p>TODO: Resolve references</p>
-    case 'db_insert':
-      return <p>TODO: Insert to database</p>
+    case 'bulk_import_finalization':
+      return (
+        <>
+          <PageHeader title="Completed Asset Imports" />
+
+          <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center space-y-5 text-center">
+            <p>
+              Successfully Imported {validatedAssets.length} asset
+              {validatedAssets.length > 1 ? 's' : ''}
+            </p>
+            {/* <Button variant={'default'} onClick={() => console.log(resolvedAssets)}>
+              Print Resolved Assets
+            </Button> */}
+            <Button variant={'default'} onClick={handleInsert}>
+              Implement Inserts
+            </Button>
+            <Button variant={'default'} onClick={() => router.push(`/orgs//${orgSlug}/assets`)}>
+              View All Assets
+            </Button>
+          </div>
+        </>
+      )
   }
 }
 
