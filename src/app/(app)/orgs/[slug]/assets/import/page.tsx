@@ -143,9 +143,9 @@ function CurrentWizardStep() {
         departmentId: null,
         locationId: null,
         status: 'active', // default is 'active'
-        purchaseDate: asset.purchaseDate,
-        purchaseCost: asset.purchaseCost ? Number(asset.purchaseCost) : null,
-        warrantyExpiry: asset.warrantyExpiry,
+        purchaseDate: (asset.purchaseDate ?? '').length > 0 ? asset.purchaseDate : null,
+        purchaseCost: (asset.purchaseCost ?? '').length > 0 ? Number(asset.purchaseCost) : null,
+        warrantyExpiry: (asset.warrantyExpiry ?? '')?.length > 0 ? asset.warrantyExpiry : null,
         vendorId: null,
       }
 
@@ -249,9 +249,10 @@ function CurrentWizardStep() {
     })
 
     setWizardStep('bulk_import_finalization')
+    handleAssetInserts
   }
 
-  const handleInsert = () => {
+  const handleAssetInserts = () => {
     resolvedAssets.map(async (asset) => {
       const newAasset = await createAsset(orgSlug, asset)
       console.log(newAasset)
@@ -262,6 +263,7 @@ function CurrentWizardStep() {
     setWizardStep('column_mapping')
     setValidAssetCounter(0)
     setInvalidAssetCounter(0)
+    setValidatedAssets([])
   }
 
   switch (wizardStep) {
@@ -381,15 +383,12 @@ function CurrentWizardStep() {
         <>
           <PageHeader title="Completed Asset Imports" />
 
-          <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center space-y-5 text-center">
+          <div className="mx-auto flex h-screen max-w-2xl flex-col items-center justify-center space-y-5 text-center">
             <p>
               Successfully Imported {validatedAssets.length} asset
               {validatedAssets.length > 1 ? 's' : ''}
             </p>
-            {/* <Button variant={'default'} onClick={() => console.log(resolvedAssets)}>
-              Print Resolved Assets
-            </Button> */}
-            <Button variant={'default'} onClick={handleInsert}>
+            <Button variant={'default'} onClick={handleAssetInserts}>
               Implement Inserts
             </Button>
             <Button variant={'default'} onClick={() => router.push(`/orgs//${orgSlug}/assets`)}>
