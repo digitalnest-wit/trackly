@@ -39,7 +39,7 @@ import { useOrg } from '@/providers/OrgProvider'
 
 type WizardStep = 'file_select' | 'column_mapping' | 'schema_validate' | 'bulk_import_finalization'
 
-function CurrentWizardStep() {
+export default function ImportPage() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [wizardStep, setWizardStep] = useState<WizardStep>('file_select')
@@ -272,7 +272,7 @@ function CurrentWizardStep() {
         <>
           <PageHeader
             title="Import assets"
-            description="Upload a CSV file to register a batch of assets"
+            description="Upload a CSV file to register a batch of assets. "
           />
           <Button variant={'secondary'} onClick={router.back}>
             Cancel
@@ -296,7 +296,7 @@ function CurrentWizardStep() {
     case 'column_mapping':
       return (
         <>
-          <PageHeader title="Column mapping" description="Select columns from uploaded file" />
+          <PageHeader title="Column Mapping" description="Select columns from uploaded file. " />
           <Form {...mappingForm}>
             <form onSubmit={mappingForm.handleSubmit(handleSchemaValidation)} className="space-y-8">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -352,17 +352,30 @@ function CurrentWizardStep() {
                   />
                 ))}
               </div>
-              <Button type="submit">Confirm</Button>
+              <div className="flex gap-4 pt-2">
+                <Button
+                  variant={'secondary'}
+                  onClick={() => {
+                    setWizardStep('file_select')
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button variant={'default'} onClick={handleBacktoColumnMapping}>
+                  Confirm
+                </Button>
+              </div>
             </form>
           </Form>
         </>
       )
+
     case 'schema_validate':
       return (
         <>
           <PageHeader
-            title="Schmema validation"
-            description="Checking the header row in the file"
+            title="Schema Validation"
+            description="Each row in this uploaded file is checked against our schema. "
           />
           <div className="flex flex-col gap-2 p-2 pl-0">
             <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
@@ -373,7 +386,7 @@ function CurrentWizardStep() {
               Cancel
             </Button>
             <Button variant={'default'} onClick={handleReferenceResolver}>
-              Next
+              Proceed
             </Button>
           </div>
         </>
@@ -398,8 +411,4 @@ function CurrentWizardStep() {
         </>
       )
   }
-}
-
-export default function ImportPage() {
-  return <CurrentWizardStep />
 }
