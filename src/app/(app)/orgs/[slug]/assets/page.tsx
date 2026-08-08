@@ -40,8 +40,8 @@ export default function AssetsPage() {
         description={isLoading ? 'Loading…' : `${totalCount} asset${totalCount !== 1 ? 's' : ''}`}
         action={
           canCreate ? (
-            <>
-              <Button asChild className="bg-gray-300">
+            <div className="flex gap-2">
+              <Button asChild>
                 <Link href={`/orgs/${orgSlug}/assets/import`}>
                   <Import className="mr-2 h-4 w-4" />
                   Import Assets
@@ -53,7 +53,7 @@ export default function AssetsPage() {
                   Add asset
                 </Link>
               </Button>
-            </>
+            </div>
           ) : undefined
         }
       />
