@@ -75,7 +75,7 @@ export default function ImportPage() {
   const [selectedColumns, setSelectedColumns] = useState<string[]>([])
   const { membership } = useOrg()
   const orgSlug = membership?.orgSlug ?? ''
-  const [resolvedAssets, setResolvedAssets] = useState<AssetFormInput[]>([])
+  const [processingInserts, setProcessingInserts] = useState<boolean>(false)
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files
@@ -91,7 +91,6 @@ export default function ImportPage() {
           if (errors.length > 0) {
             console.log(errors)
           }
-          console.log(data)
         },
       })
       setWizardStep('column_mapping')
@@ -113,8 +112,6 @@ export default function ImportPage() {
           ;(asset as Record<string, unknown>)[property] = null
         }
       })
-      // Print the asset object with properties initialized to the given asset data from uploaded csv file
-      console.log(asset)
 
       // Verify the object does follow the expected schema structure
       const result = ImportedAssetSchema.safeParse(asset)
@@ -129,133 +126,133 @@ export default function ImportPage() {
         console.log(result.error)
       }
     }
-    console.log(validatedAssets)
   }
 
-  const handleReferenceResolver = () => {
-    validatedAssets.forEach(async (asset) => {
-      const resolvedAsset: AssetFormInput = {
-        name: asset.name,
-        assetTag: asset.assetTag,
-        isBulk: false,
-        quantity: asset.quantity ? Number(asset.quantity) : null,
-        categoryId: null,
-        departmentId: null,
-        locationId: null,
-        status: 'active', // default is 'active'
-        purchaseDate: (asset.purchaseDate ?? '').length > 0 ? asset.purchaseDate : null,
-        purchaseCost: (asset.purchaseCost ?? '').length > 0 ? Number(asset.purchaseCost) : null,
-        warrantyExpiry: (asset.warrantyExpiry ?? '')?.length > 0 ? asset.warrantyExpiry : null,
-        vendorId: null,
-      }
-
-      if (asset.isBulk) {
-        if (asset.isBulk.toLowerCase() === 'true' || asset.isBulk.toLowerCase() === 'yes') {
-          resolvedAsset.isBulk = true
-        } else if (asset.isBulk.toLowerCase() === 'false' || asset.isBulk.toLowerCase() === 'no') {
-          resolvedAsset.isBulk = false
+  const handleReferenceResolver = async () => {
+    setProcessingInserts(true)
+    const resolvedAssets: AssetFormInput[] = await Promise.all(
+      validatedAssets.map(async (asset) => {
+        const resolvedAsset: AssetFormInput = {
+          name: asset.name,
+          assetTag: asset.assetTag,
+          isBulk: false,
+          quantity: asset.quantity ? Number(asset.quantity) : null,
+          categoryId: null,
+          departmentId: null,
+          locationId: null,
+          status: 'active', // default is 'active'
+          purchaseDate: (asset.purchaseDate ?? '').length > 0 ? asset.purchaseDate : null,
+          purchaseCost: (asset.purchaseCost ?? '').length > 0 ? Number(asset.purchaseCost) : null,
+          warrantyExpiry: (asset.warrantyExpiry ?? '')?.length > 0 ? asset.warrantyExpiry : null,
+          vendorId: null,
         }
-      }
-      if (asset.status) {
-        const assetStatus = asset.status.toLowerCase().trim().replaceAll(' ', '_')
-        switch (assetStatus) {
-          case 'active':
-            resolvedAsset.status = 'active'
-            break
 
-          case 'under_maintenance':
-            resolvedAsset.status = 'under_maintenance'
-            break
-
-          case 'retired':
-            resolvedAsset.status = 'retired'
-            break
-
-          case 'lost':
-            resolvedAsset.status = 'lost'
-            break
-
-          case 'in_storage':
-            resolvedAsset.status = 'in_storage'
-            break
-
-          case 'checked_out':
-            resolvedAsset.status = 'checked_out'
-            break
-
-          case 'reserved':
-            resolvedAsset.status = 'reserved'
-            break
-
-          default:
-            break
-        }
-      }
-      if (asset.category) {
-        // we have a category, find the id and set the resolvedAsset.category
-        const result = categories.find((category) => category.name === asset.category)
-        if (result) {
-          resolvedAsset.categoryId = result.id
-        } else {
-          // no match, create the category
-          const id = await createCategory({ name: asset.category })
-          if (id) {
-            resolvedAsset.categoryId = id
+        if (asset.isBulk) {
+          if (asset.isBulk.toLowerCase() === 'true' || asset.isBulk.toLowerCase() === 'yes') {
+            resolvedAsset.isBulk = true
+          } else if (
+            asset.isBulk.toLowerCase() === 'false' ||
+            asset.isBulk.toLowerCase() === 'no'
+          ) {
+            resolvedAsset.isBulk = false
           }
         }
-      } else {
-        // no category provided, skip
-      }
+        if (asset.status) {
+          const assetStatus = asset.status.toLowerCase().trim().replaceAll(' ', '_')
+          switch (assetStatus) {
+            case 'active':
+              resolvedAsset.status = 'active'
+              break
 
-      if (asset.department) {
-        // We have a department, find the id and set the resolvedAsset.department
-        const result = departments.find((department) => department.name === asset.department)
-        if (result) {
-          resolvedAsset.departmentId = result.id
-        } else {
-          // no match, create the department
-          const id = await createDepartment({ name: asset.department })
-          if (id) {
-            resolvedAsset.departmentId = id
+            case 'under_maintenance':
+              resolvedAsset.status = 'under_maintenance'
+              break
+
+            case 'retired':
+              resolvedAsset.status = 'retired'
+              break
+
+            case 'lost':
+              resolvedAsset.status = 'lost'
+              break
+
+            case 'in_storage':
+              resolvedAsset.status = 'in_storage'
+              break
+
+            case 'checked_out':
+              resolvedAsset.status = 'checked_out'
+              break
+
+            case 'reserved':
+              resolvedAsset.status = 'reserved'
+              break
+
+            default:
+              break
           }
         }
-      } else {
-        // no department provided, skip
-      }
-      if (asset.location) {
-        const result = location.find((locaiton) => locaiton.name === asset.location)
-        if (result) {
-          resolvedAsset.locationId = result.id
-        } else {
-          const id = await createLocation({ name: asset.location })
-          if (id) {
-            resolvedAsset.locationId = id
+        if (asset.category) {
+          // we have a category, find the id and set the resolvedAsset.category
+          const result = categories.find((category) => category.name === asset.category)
+          if (result) {
+            resolvedAsset.categoryId = result.id
+          } else {
+            // no match, create the category
+            const id = await createCategory({ name: asset.category })
+            if (id) {
+              resolvedAsset.categoryId = id
+            }
           }
         }
-      }
-      if (asset.vendor) {
-        const result = vendors.find((vendor) => vendor.name === asset.vendor)
-        if (result) {
-          resolvedAsset.vendorId = result.id
-        } else {
-          const id = await createVendor({ name: asset.vendor })
-          if (id) {
-            resolvedAsset.vendorId = id
+
+        if (asset.department) {
+          const result = departments.find((department) => department.name === asset.department)
+          if (result) {
+            resolvedAsset.departmentId = result.id
+          } else {
+            const id = await createDepartment({ name: asset.department })
+            if (id) {
+              resolvedAsset.departmentId = id
+            }
           }
         }
-      }
 
-      setResolvedAssets((prevResolvedAssets) => [...prevResolvedAssets, resolvedAsset])
-    })
+        if (asset.location) {
+          const result = location.find((locaiton) => locaiton.name === asset.location)
+          if (result) {
+            resolvedAsset.locationId = result.id
+          } else {
+            const id = await createLocation({ name: asset.location })
+            if (id) {
+              resolvedAsset.locationId = id
+            }
+          }
+        }
 
+        if (asset.vendor) {
+          const result = vendors.find((vendor) => vendor.name === asset.vendor)
+          if (result) {
+            resolvedAsset.vendorId = result.id
+          } else {
+            const id = await createVendor({ name: asset.vendor })
+            if (id) {
+              resolvedAsset.vendorId = id
+            }
+          }
+        }
+
+        return resolvedAsset
+      })
+    )
+    handleAssetInserts(resolvedAssets)
+    setProcessingInserts(false)
     setWizardStep('bulk_import_finalization')
-    handleAssetInserts
   }
 
-  const handleAssetInserts = () => {
-    resolvedAssets.map(async (asset) => {
-      const newAasset = await createAsset(orgSlug, asset)
-      console.log(newAasset)
+  const handleAssetInserts = (assets: AssetFormInput[]) => {
+    assets.forEach(async (asset) => {
+      await createAsset(orgSlug, asset)
     })
   }
 
@@ -377,33 +374,36 @@ export default function ImportPage() {
             title="Schema Validation"
             description="Each row in this uploaded file is checked against our schema. "
           />
-          <div className="flex flex-col gap-2 p-2 pl-0">
-            <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
-            <p className="text-destructive">Failed Validated Rows: {invalidAssetCounter}</p>
-          </div>
-          <div className="flex gap-4 pt-2">
-            <Button variant={'secondary'} onClick={handleBacktoColumnMapping}>
-              Cancel
-            </Button>
-            <Button variant={'default'} onClick={handleReferenceResolver}>
-              Proceed
-            </Button>
-          </div>
+          {processingInserts ? (
+            // <PageLoader />
+            <div className="loading-spinner"></div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 p-2 pl-0">
+                <p className="text-green-600">Successfully Validated Rows: {validAssetCounter}</p>
+                <p className="text-destructive">Failed Validated Rows: {invalidAssetCounter}</p>
+              </div>
+              <div className="flex gap-4 pt-2">
+                <Button variant={'secondary'} onClick={handleBacktoColumnMapping}>
+                  Cancel
+                </Button>
+                <Button variant={'default'} onClick={handleReferenceResolver}>
+                  Proceed
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )
     case 'bulk_import_finalization':
       return (
         <>
           <PageHeader title="Completed Asset Imports" />
-
-          <div className="mx-auto flex h-screen max-w-2xl flex-col items-center justify-center space-y-5 text-center">
+          <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center space-y-5 text-center">
             <p>
               Successfully Imported {validatedAssets.length} asset
               {validatedAssets.length > 1 ? 's' : ''}
             </p>
-            <Button variant={'default'} onClick={handleAssetInserts}>
-              Implement Inserts
-            </Button>
             <Button variant={'default'} onClick={() => router.push(`/orgs//${orgSlug}/assets`)}>
               View All Assets
             </Button>
