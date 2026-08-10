@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutGrid, List, Plus } from 'lucide-react'
+import { Import, LayoutGrid, List, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -40,12 +40,20 @@ export default function AssetsPage() {
         description={isLoading ? 'Loading…' : `${totalCount} asset${totalCount !== 1 ? 's' : ''}`}
         action={
           canCreate ? (
-            <Button asChild>
-              <Link href={`/orgs/${orgSlug}/assets/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add asset
-              </Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild>
+                <Link href={`/orgs/${orgSlug}/assets/import`}>
+                  <Import className="mr-2 h-4 w-4" />
+                  Import Assets
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/orgs/${orgSlug}/assets/new`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add asset
+                </Link>
+              </Button>
+            </div>
           ) : undefined
         }
       />
